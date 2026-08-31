@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PlameApps - Онлайн Симулятор</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: linear-gradient(180deg, #b5c6f0 0%, #f4c8e2 100%); min-height: 100vh; display: flex; justify-content: center; }
+        
+        .phone-frame { width: 100%; max-width: 400px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; position: relative; background: #fff; }
+        .app-container { flex: 1; overflow-y: auto; position: relative; background: linear-gradient(180deg, #b5c6f0 0%, #f4c8e2 100%); -webkit-overflow-scrolling: touch; }
+
+        .android-nav { background: #d1d3d6; height: 50px; display: flex; justify-content: space-around; align-items: center; flex-shrink: 0; box-shadow: 0 -2px 5px rgba(0,0,0,0.2); }
+        .nav-btn { width: 60px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 24px; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+
+        /* РЕГИСТРАЦИЯ */
+        #register-screen { display: flex; width: 100%; height: 100%; background: linear-gradient(135deg, #2b7de9, #00d2ff); color: white; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+        #register-screen h2 { font-size: 28px; margin-bottom: 30px; font-weight: 800; }
+        .reg-input, .reg-select { width: 100%; max-width: 300px; padding: 15px; margin-bottom: 15px; border: none; border-radius: 10px; font-size: 16px; background: rgba(255,255,255,0.9); }
+        .reg-btn { width: 100%; max-width: 300px; padding: 15px; border: none; border-radius: 10px; background: #fff; color: #2b7de9; font-size: 18px; font-weight: 800; cursor: pointer; margin-top: 10px; }
+        .reg-btn:hover { background: #f0f0f0; }
+
+        #launcher { width: 100%; height: 100%; padding: 40px 20px; display: none; }
+        .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px 14px; align-items: start; }
+        .app-item { display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; transition: transform 0.2s; }
+        .app-item:hover { transform: scale(1.05); }
+        .app-icon { width: 62px; height: 62px; border-radius: 15px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.15); position: relative; background-color: #fff; overflow: hidden; }
+        .icon-avtobuy { background: linear-gradient(135deg, #f8f9fa, #e9ecef); }
+        .icon-avtobuy::before { content: "💵"; font-size: 24px; position: absolute; top: 5px; left: 10px; transform: rotate(-15deg); }
+        .icon-avtobuy::after { content: "🚗"; font-size: 24px; position: absolute; bottom: 2px; right: 8px; transform: rotate(10deg); }
+        .icon-transport { background: linear-gradient(135deg, #ffffff, #f1f2f6); box-shadow: 0 4px 8px rgba(0,0,0,0.15), inset 0 0 0 2px #e0e0e0; }
+        .icon-transport::before { content: "📍"; font-size: 34px; }
+        .icon-garage { background: #203a5c; }
+        .icon-garage::before { content: "🏠"; font-size: 20px; position: absolute; top: 8px; color: #fff; }
+        .icon-garage::after { content: "🚗"; font-size: 20px; position: absolute; bottom: 4px; color: #fff; }
+        .icon-pbank { background: linear-gradient(135deg, #ff7e00, #ff5500); }
+        .icon-pbank::before { content: "П"; font-size: 30px; font-weight: 800; color: #fff; margin-top: -8px; }
+        .icon-pbank::after { content: "BANK"; font-size: 8px; font-weight: bold; color: #fff; position: absolute; bottom: 10px; letter-spacing: 1px; }
+        .icon-finance { background: #fbbf24; }
+        .icon-finance::before { content: "🏦"; font-size: 28px; }
+        .icon-sleep { background: #ffffff; }
+        .icon-sleep::before { content: "🛏️"; font-size: 34px; }
+        .icon-calendar { background: #e63946; }
+        .icon-calendar::before { content: "📅"; font-size: 30px; }
+        .icon-realtor { background: linear-gradient(135deg, #0984e3, #0a6ebd); }
+        .icon-realtor::before { content: "🏢"; font-size: 30px; }
+        .icon-settings { background: #ffffff; box-shadow: 0 4px 8px rgba(0,0,0,0.15), inset 0 0 0 2px #e0e0e0; }
+        .icon-settings::before { content: "⚙️"; font-size: 34px; filter: grayscale(100%); }
+        .icon-notepad { background: #ffffff; box-shadow: 0 4px 8px rgba(0,0,0,0.15), inset 0 0 0 2px #e0e0e0; }
+        .icon-notepad::before { content: "💡"; font-size: 28px; color: #0984e3; }
+        .icon-blocks { background: #1e1e1e; }
+        .icon-blocks::before { content: "🟧"; font-size: 28px; }
+        .app-name { font-size: 13px; color: #ffffff; font-weight: 500; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+
+        .screen { display: none; width: 100%; height: 100%; background: #f5f5f5; color: #222; flex-direction: column; overflow: hidden; position: relative; }
+        .screen-header { display: flex; align-items: center; padding: 15px; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 10; }
+        .back-btn { font-size: 22px; cursor: pointer; color: #333; margin-right: 15px; }
+        .screen-title { font-size: 18px; font-weight: 700; }
+        .screen-content { flex: 1; overflow-y: auto; padding: 15px; }
+
+        /* AVTOBUY */
+        .ab-header { background: #2b7de9; padding: 10px 15px; color: white; display: flex; justify-content: space-between; align-items: center; position: relative; }
+        .ab-logo { background: white; color: #2b7de9; padding: 2px 12px; border-radius: 20px; font-weight: 800; }
+        .ab-city { background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 20px; font-size: 13px; cursor: pointer; }
+        .ab-search-box { background: white; margin: 10px; border-radius: 12px; padding: 10px; display: flex; align-items: center; color: #888; }
+        .ab-content { padding: 10px; padding-bottom: 80px; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
+        .ab-card { background: white; margin-bottom: 12px; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; }
+        .ab-card-img { width: 100%; height: 180px; background-size: cover; background-position: center; background-color: #ddd; position: relative; }
+        .ab-card-body { padding: 14px 15px 16px; }
+        .ab-price { color: #00a550; font-size: 20px; font-weight: 700; margin-bottom: 5px; }
+        .ab-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+        .ab-specs { font-size: 13px; color: #777; line-height: 1.6; }
+        .ab-seller { font-size: 15px; font-weight: 600; margin-top: 10px; }
+        .ab-date { font-size: 13px; color: #999; }
+        .ab-bottom-nav { position: absolute; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e0e0e0; display: flex; justify-content: space-around; padding: 10px 0; z-index: 20; }
+        .ab-nav-item { display: flex; flex-direction: column; align-items: center; font-size: 12px; color: #777; cursor: pointer; background: none; border: none; padding: 5px; }
+        .ab-nav-item span { font-size: 20px; }
+        .ab-nav-item.active { color: #2b7de9; }
+        .ab-add-btn { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); width: 50px; height: 50px; background: #2b7de9; color: white; border-radius: 50%; font-size: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer; z-index: 30; border: 4px solid white; }
+        .clock-badge { position: absolute; right: 70px; background: rgba(255,255,255,0.9); color: #2b7de9; padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; text-align: center; }
+
+        #detail-screen { background: white; }
+        .detail-header { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #eee; }
+        .detail-header .back-btn { margin-right: auto; }
+        .detail-header .action-icon { font-size: 20px; margin-left: 15px; color: #777; cursor: pointer; }
+        .detail-img { width: 100%; height: 250px; background-size: cover; background-position: center; background-color: #ddd; position: relative; }
+        .detail-price { color: #00a550; font-size: 28px; font-weight: 700; padding: 15px; }
+        .detail-title { font-size: 20px; font-weight: 700; padding: 0 15px 15px; }
+        .seller-card { margin: 0 15px; padding: 15px; background: #f8f9fa; border-radius: 10px; display: flex; align-items: center; margin-bottom: 15px; }
+        .specs-table { margin: 0 15px; border-top: 1px solid #eee; margin-bottom: 20px; }
+        .spec-row { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
+        .detail-buttons { position: absolute; bottom: 70px; left: 0; right: 0; background: white; border-top: 1px solid #ddd; display: flex; gap: 10px; padding: 10px; z-index: 10; }
+        .btn-blue, .btn-green { flex: 1; border: none; border-radius: 20px; font-size: 16px; font-weight: 700; cursor: pointer; padding: 12px; }
+        .btn-blue { background: #2b7de9; color: white; }
+        .btn-green { background: white; color: #00a550; border: 1px solid #00a550; }
+
+        #favorites-screen .ab-header { background: #2b7de9; color: white; padding: 15px; display: flex; align-items: center; }
+        .empty-state { text-align: center; color: #888; margin-top: 100px; font-size: 16px; }
+        #new-listing-screen .ab-header { background: #2b7de9; color: white; padding: 15px; display: flex; align-items: center; }
+        .new-listing-card { background: white; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 10px; display: flex; align-items: center; gap: 15px; margin: 15px; }
+        .new-listing-img { width: 60px; height: 45px; border-radius: 5px; background-size: cover; background-position: center; }
+        .sell-btn { background: #00a550; color: white; border: none; border-radius: 20px; padding: 10px 20px; font-weight: 700; cursor: pointer; }
+
+        #chats-screen .ab-header { background: #2b7de9; color: white; padding: 15px; display: flex; align-items: center; }
+        .chat-tabs { display: flex; background: white; border-bottom: 1px solid #ddd; }
+        .chat-tab { flex: 1; text-align: center; padding: 12px; font-weight: 600; color: #777; cursor: pointer; border-bottom: 2px solid transparent; }
+        .chat-tab.active { color: #2b7de9; border-bottom: 2px solid #2b7de9; }
+        .chat-empty { text-align: center; color: #888; margin-top: 100px; }
+        .chat-empty-icon { font-size: 50px; margin-bottom: 20px; }
+
+        #profile-screen .ab-header { background: #2b7de9; color: white; padding: 15px; display: flex; align-items: center; }
+        .profile-blue-bg { background: #2b7de9; color: white; padding: 20px; }
+        .profile-avatar { width: 70px; height: 70px; border-radius: 50%; background: white; color: #2b7de9; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 800; margin-right: 15px; }
+        .profile-name { font-size: 22px; font-weight: 700; }
+        .profile-rating { color: #ffd700; font-size: 18px; }
+        .profile-profit-box { background: rgba(255,255,255,0.2); border-radius: 10px; padding: 15px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+        .profile-tabs { display: flex; background: #f5f5f5; border-bottom: 1px solid #ddd; }
+        .profile-tab { flex: 1; text-align: center; padding: 12px; font-weight: 600; color: #777; cursor: pointer; border-bottom: 2px solid transparent; }
+        .profile-tab.active { color: #2b7de9; border-bottom: 2px solid #2b7de9; }
+        .profile-empty { text-align: center; color: #888; margin-top: 100px; }
+
+        #transport-screen { background: #191a1f; color: #fff; }
+        #transport-screen .screen-header { background: #191a1f; color: #fff; border-bottom: 1px solid #2a2b30; }
+        #transport-screen .back-btn { color: #fff; }
+        .tr-current-city { padding: 15px; border-bottom: 1px solid #2a2b30; font-weight: 700; }
+        .tr-search-box { background: #2a2b30; margin: 15px; border-radius: 10px; padding: 12px; color: #888; }
+        .tr-city-item { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #2a2b30; cursor: pointer; }
+        .tr-city-item:hover { background: #2a2b30; }
+        .tr-city-name { font-weight: 600; }
+        .tr-city-km { font-size: 13px; color: #888; }
+        .tr-arrow { margin-left: auto; color: #888; }
+        #transport-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 100; }
+        #transport-modal-content { background: #f7f7f7; width: 90%; max-width: 340px; border-radius: 15px; padding: 20px; color: #222; }
+        .tm-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+        .tm-subtitle { font-size: 14px; color: #666; margin-bottom: 20px; }
+        .tm-options { display: flex; flex-direction: column; gap: 10px; }
+        .tm-option { display: flex; align-items: center; padding: 15px; border-radius: 12px; cursor: pointer; border: 1px solid transparent; }
+        .tm-train { background: #fff3e0; border-color: #ffe0b2; }
+        .tm-train .tm-icon { background: #ffb74d; }
+        .tm-train .tm-price { color: #e65100; }
+        .tm-plane { background: #e3f2fd; border-color: #bbdefb; }
+        .tm-plane .tm-icon { background: #64b5f6; }
+        .tm-plane .tm-price { color: #1565c0; }
+        .tm-taxi { background: #fff8e1; border-color: #ffecb3; }
+        .tm-taxi .tm-icon { background: #ffd54f; }
+        .tm-taxi .tm-price { color: #f57f17; }
+        .tm-car { background: #e8f5e9; border-color: #c8e6c9; }
+        .tm-car .tm-icon { background: #81c784; }
+        .tm-car .tm-price { color: #2e7d32; }
+        .tm-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff; margin-right: 15px; }
+        .tm-info { flex: 1; }
+        .tm-name { font-size: 16px; font-weight: 600; margin-bottom: 3px; }
+        .tm-duration { font-size: 13px; color: #777; }
+        .tm-price { font-size: 18px; font-weight: 700; }
+        .tm-close { margin-top: 15px; background: #e0e0e0; border: none; padding: 12px; width: 100%; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; }
+
+        #garage-screen .screen-header { background: #2b7de9; color: white; }
+        #garage-screen .back-btn { color: white; }
+        .garage-tabs { display: flex; border-bottom: 2px solid #eee; }
+        .garage-tab { flex: 1; text-align: center; padding: 12px; font-weight: 600; color: #777; cursor: pointer; }
+        .garage-tab.active { color: #2b7de9; border-bottom: 2px solid #2b7de9; }
+        .garage-card { display: flex; align-items: center; padding: 15px; background: white; margin-bottom: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+        #pbank-screen .screen-header { background: #ff7e00; color: white; }
+        #pbank-screen .back-btn { color: white; }
+        .pbank-balance { background: #ff7e00; padding: 20px; color: white; border-radius: 15px; margin-bottom: 20px; }
+        .pbank-txn { display: flex; padding: 10px; background: white; border-radius: 10px; margin-bottom: 10px; align-items: center; }
+
+        #finance-screen .screen-header { background: #fbbf24; color: #333; }
+        #finance-screen .back-btn { color: #333; }
+        .fin-tabs { display: flex; background: #fbbf24; padding-bottom: 10px; }
+        .fin-tab { flex: 1; text-align: center; font-weight: 600; color: #555; cursor: pointer; padding: 5px; }
+        .fin-tab.active { color: #000; border-bottom: 3px solid #000; }
+
+        #sleep-screen { background: #10121a; color: white; text-align: center; }
+        #sleep-screen .screen-header { background: #10121a; color: white; position: absolute; top: 0; width: 100%; z-index: 10; }
+        #sleep-screen .back-btn { color: white; }
+        .sleep-time { font-size: 48px; margin-top: 100px; }
+        .sleep-date { color: #888; margin-bottom: 40px; }
+        .sleep-message { background: #1c1e2a; padding: 15px; border-radius: 10px; color: #ccc; margin: 0 20px; }
+
+        #calendar-screen .screen-header { background: #e63946; color: white; }
+        #calendar-screen .back-btn { color: white; }
+        .cal-month { text-align: center; font-weight: 700; font-size: 18px; margin-bottom: 15px; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 20px; }
+        .cal-day-header { font-weight: 700; color: #888; text-align: center; font-size: 12px; }
+        .cal-day { text-align: center; padding: 10px; border-radius: 50%; cursor: pointer; font-weight: 600; }
+        .cal-day:hover { background: #f0f0f0; }
+        .cal-day.today { background: #e63946; color: white; }
+        .meeting-item { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .meeting-time { background: #e63946; color: white; padding: 5px 10px; border-radius: 5px; font-weight: 700; }
+
+        #realtor-screen .screen-header { background: #0984e3; color: white; }
+        #realtor-screen .back-btn { color: white; }
+        .rl-region { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; cursor: pointer; }
+        .rl-buy-btn { background: #00a550; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: 700; cursor: pointer; margin-left: auto; }
+        .rl-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 100; }
+        .rl-modal-content { background: white; padding: 20px; border-radius: 15px; width: 90%; max-width: 350px; }
+        .rl-option { border: 2px solid #eee; border-radius: 10px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .rl-option:hover { border-color: #0984e3; }
+        .rl-option-icon { font-size: 24px; margin-right: 15px; }
+        .rl-option-price { font-weight: 700; color: #0984e3; }
+
+        #settings-screen .screen-header { background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .set-row { display: flex; align-items: center; justify-content: space-between; padding: 15px; background: white; margin-bottom: 10px; border-radius: 10px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .set-icon { width: 30px; height: 30px; border-radius: 5px; display: flex; align-items: center; justify-content: center; color: white; margin-right: 15px; font-size: 14px; }
+        .set-info { flex: 1; font-weight: 600; }
+        .set-toggle { width: 40px; height: 20px; background: #ccc; border-radius: 10px; position: relative; cursor: pointer; }
+        .set-toggle.active { background: #00a550; }
+        .set-toggle::after { content: ''; position: absolute; width: 16px; height: 16px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: 0.2s; }
+        .set-toggle.active::after { left: 22px; }
+
+        #notepad-screen .screen-header { background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .np-note { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; }
+        .np-add-btn { position: fixed; bottom: 65px; right: 20px; width: 50px; height: 50px; background: #0984e3; color: white; border-radius: 50%; font-size: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; z-index: 50; }
+
+        #blocks-screen { background: #1e1e1e; color: white; }
+        #blocks-screen .screen-header { background: #1e1e1e; color: white; border-bottom: 1px solid #333; }
+        #blocks-screen .back-btn { color: white; }
+        .blocks-score { display: flex; justify-content: space-between; padding: 10px; }
+        .blocks-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; background: #333; padding: 2px; border-radius: 5px; margin: 20px 10px; }
+        .block-cell { width: 100%; aspect-ratio: 1; background: #222; border-radius: 2px; }
+        .block-cell.active { background: #ff7e00; }
+        .block-controls { display: flex; justify-content: space-around; margin-top: 20px; }
+        .block-control-btn { background: #333; color: white; border: none; padding: 15px 25px; font-size: 20px; border-radius: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<!-- ===== ЭКРАН РЕГИСТРАЦИИ ===== -->
+<div id="register-screen">
+    <h2>🚗 PlameApps</h2>
+    <p style="margin-bottom: 20px; opacity: 0.9;">Создай свой профиль перекупа</p>
+    <input type="text" class="reg-input" id="reg-nick" value="Иван" placeholder="Ваш Ник">
+    <select class="reg-select" id="reg-city">
+        <option value="Чебоксары">📍 Чебоксары (Старт)</option>
+        <option value="Казань">📍 Казань</option>
+        <option value="Москва">📍 Москва</option>
+        <option value="Санкт-Петербург">📍 Санкт-Петербург</option>
+        <option value="Йошкар-Ола">📍 Йошкар-Ола</option>
+        <option value="Нижний Новгород">📍 Нижний Новгород</option>
+    </select>
+    <button class="reg-btn" onclick="registerPlayer()">НАЧАТЬ ИГРУ</button>
+</div>
+
+<div class="phone-frame" id="game-frame" style="display: none;">
+    <div class="app-container" id="app-scroll-container">
+        <!-- ЛАУНЧЕР (Отображается после регистрации) -->
+        <div id="launcher">
+            <div class="app-grid">
+                <div class="app-item" onclick="openScreen('avtobuy')"><div class="app-icon icon-avtobuy"></div><div class="app-name">Avtobuy</div></div>
+                <div class="app-item" onclick="openScreen('transport')"><div class="app-icon icon-transport"></div><div class="app-name">Транспорт</div></div>
+                <div class="app-item" onclick="openScreen('garage')"><div class="app-icon icon-garage"></div><div class="app-name">Гараж</div></div>
+                <div class="app-item" onclick="openScreen('pbank')"><div class="app-icon icon-pbank"></div><div class="app-name">П-Банк</div></div>
+                <div class="app-item" onclick="openScreen('finance')"><div class="app-icon icon-finance"></div><div class="app-name">PlameFinance</div></div>
+                <div class="app-item" onclick="openScreen('sleep')"><div class="app-icon icon-sleep"></div><div class="app-name">Сон</div></div>
+                <div class="app-item" onclick="openScreen('calendar')"><div class="app-icon icon-calendar"></div><div class="app-name">Календарь</div></div>
+                <div class="app-item" onclick="openScreen('realtor')"><div class="app-icon icon-realtor"></div><div class="app-name">Риэлтор</div></div>
+                <div class="app-item" onclick="openScreen('settings')"><div class="app-icon icon-settings"></div><div class="app-name">Настройки</div></div>
+                <div class="app-item" onclick="openScreen('notepad')"><div class="app-icon icon-notepad"></div><div class="app-name">Блокнот</div></div>
+                <div class="app-item" onclick="openScreen('blocks')"><div class="app-icon icon-blocks"></div><div class="app-name">PlameBlocks</div></div>
+                <div class="app-item" id="admin-app-item" style="display:none;" onclick="openAdminPanel()">
+                    <div class="app-icon" style="background:#111;color:#ffd54a;font-size:28px;">🛡️</div>
+                    <div class="app-name">Админ</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Avtobuy -->
+        <div id="avtobuy" class="screen">
+            <div class="ab-header">
+                <div class="ab-logo">Avtobuy</div>
+                <div class="ab-city">📍 <span id="current-city-label">Чебоксары</span> ▾</div>
+                <div class="clock-badge">🕒 <span id="header-clock">08:00</span></div>
+            </div>
+            <div class="ab-search-box">🔍 Поиск по объявлениям &nbsp;&nbsp;&nbsp; ⇅ ☰</div>
+            <div class="ab-content" id="ab-content"></div>
+            <div class="ab-bottom-nav">
+                <button class="ab-nav-item active" onclick="showAvtobuyPage('main', this)"><span>📄</span>Объявления</button>
+                <button class="ab-nav-item" onclick="showAvtobuyPage('favorites', this)"><span>🔖</span>Избранное</button>
+                <button class="ab-nav-item" onclick="showAvtobuyPage('new', this)"><span>📝</span>Новое</button>
+                <button class="ab-nav-item" onclick="showAvtobuyPage('chats', this)"><span>💬</span>Сообщения</button>
+                <button class="ab-nav-item" onclick="showAvtobuyPage('profile', this)"><span>👤</span>Профиль</button>
+            </div>
+            <div class="ab-add-btn" onclick="showAvtobuyPage('new', document.querySelector('.ab-nav-item[onclick*="new"]'))">+</div>
+        </div>
+
+        <div id="favorites-screen" class="screen">
+            <div class="ab-header"><div class="back-btn" onclick="goBackToMainAvtobuy()" style="color:white;">←</div><div class="screen-title">Избранное</div></div>
+            <div class="screen-content"><div class="empty-state">В избранном пока пусто</div></div>
+        </div>
+
+        <div id="new-listing-screen" class="screen">
+            <div class="ab-header"><div class="back-btn" onclick="goBackToMainAvtobuy()" style="color:white;">←</div><div class="screen-title">Новое объявление</div></div>
+            <div class="screen-content" id="new-listing-content"></div>
+        </div>
+
+        <div id="chats-screen" class="screen">
+            <div class="ab-header"><div class="back-btn" onclick="goBackToMainAvtobuy()" style="color:white;">←</div><div class="screen-title">Чаты</div></div>
+            <div class="chat-tabs"><div class="chat-tab active">Входящие</div><div class="chat-tab">Исходящие</div></div>
+            <div class="screen-content"><div class="chat-empty"><div class="chat-empty-icon">💬</div><div>Нет входящих сообщений</div></div></div>
+        </div>
+
+        <div id="profile-screen" class="screen">
+            <div class="ab-header"><div class="back-btn" onclick="goBackToMainAvtobuy()" style="color:white;">←</div><div class="screen-title">Профиль</div></div>
+            <div class="profile-blue-bg">
+                <div style="display:flex; align-items:center;">
+                    <div class="profile-avatar" id="profile-avatar-letter">И</div>
+                    <div><div class="profile-name" id="profile-nick">Иван</div><div class="profile-rating">★★★☆☆</div></div>
+                </div>
+                <div class="profile-profit-box"><span>Общая прибыль:</span><span style="color:#ffd700;" id="profile-profit">0 ₽</span></div>
+            </div>
+            <div class="profile-tabs"><div class="profile-tab active">Активно</div><div class="profile-tab">Продано</div><div class="profile-tab">Достижения</div></div>
+            <div class="screen-content">
+                <div id="profile-cars-list"></div>
+                <div class="profile-empty" id="profile-empty-text" style="display:none;">У вас нет активных объявлений</div>
+            </div>
+        </div>
+
+        <!-- Детальное объявление -->
+        <div id="detail-screen" class="screen">
+            <div class="detail-header">
+                <div class="back-btn" onclick="closeDetail()">←</div>
+                <div class="screen-title" id="detail-title-top"></div>
+                <div class="action-icon">↗</div><div class="action-icon">🔖</div>
+            </div>
+            <div class="screen-content" style="padding:0; padding-bottom: 80px;">
+                <div class="detail-img" id="detail-img" style="background-image:url('')"></div>
+                <div class="detail-price" id="detail-price"></div>
+                <div class="detail-title" id="detail-title"></div>
+                <div class="seller-card">
+                    <div style="width:50px;height:50px;border-radius:50%;background:#a3c9f1;color:white;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:bold;margin-right:15px;" id="detail-avatar">А</div>
+                    <div><h3 id="detail-seller-name"></h3><p style="font-size:13px;color:#777;">Частное лицо</p><p style="font-size:13px;color:#f39c12;">★ 3.6 · 20 отзывов</p></div>
+                </div>
+                <div class="specs-table" id="detail-specs"></div>
+                <div style="margin:0 15px 20px; background:#e3f2fd; padding:15px; border-radius:10px; display:flex; align-items:center;">
+                    <div style="background:#2196f3;color:white;width:30px;height:30px;border-radius:5px;display:flex;align-items:center;justify-content:center;margin-right:15px;">📊</div>
+                    <div><h4 style="font-size:14px;color:#555;">Рыночная стоимость</h4><p style="font-size:18px;font-weight:700;color:#1976d2;" id="detail-market-value"></p></div>
+                </div>
+                <div style="margin:0 15px 20px;">
+                    <h3>Описание</h3>
+                    <p style="font-size:14px;line-height:1.6;color:#333;" id="detail-description"></p>
+                </div>
+            </div>
+            <div class="detail-buttons" id="detail-actions"></div>
+        </div>
+
+        <!-- Транспорт -->
+        <div id="transport" class="screen" style="background: #191a1f; color: #fff;">
+            <div class="screen-header" style="background:#191a1f; color:#fff; border-bottom:1px solid #2a2b30;">
+                <div class="back-btn" onclick="closeScreen('transport')">←</div><div class="screen-title">Куда едем?</div>
+            </div>
+            <div class="tr-current-city">ВЫ СЕЙЧАС ЗДЕСЬ<br><span style="font-size:18px;">◎ <span id="transport-current-city">Чебоксары</span></span></div>
+            <div class="tr-search-box">🔍 Найти город...</div>
+            <div id="transport-list" style="flex:1; overflow-y:auto;"></div>
+        </div>
+
+        <div id="transport-modal">
+            <div id="transport-modal-content">
+                <div class="tm-title" id="tm-title">Маршрут: Чебоксары → Йошкар-Ола</div>
+                <div class="tm-subtitle" id="tm-subtitle">Расстояние: 81 км</div>
+                <div class="tm-options">
+                    <div class="tm-option tm-train" onclick="buyTransport('Поезд', 1702)"><div class="tm-icon">🚂</div><div class="tm-info"><div class="tm-name">Поезд</div><div class="tm-duration">В пути: 2 ч.</div></div><div class="tm-price">1 702 ₽</div></div>
+                    <div class="tm-option tm-plane" onclick="buyTransport('Самолет', 5648)"><div class="tm-icon">✈️</div><div class="tm-info"><div class="tm-name">Самолет</div><div class="tm-duration">В пути: 3 ч.</div></div><div class="tm-price">5 648 ₽</div></div>
+                    <div class="tm-option tm-taxi" onclick="buyTransport('Такси / Попутка', 1715)"><div class="tm-icon">🚕</div><div class="tm-info"><div class="tm-name">Такси / Попутка</div><div class="tm-duration">В пути: 1 ч.</div></div><div class="tm-price">1 715 ₽</div></div>
+                    <div class="tm-option tm-car" onclick="buyTransport('На своем авто', 567)"><div class="tm-icon">🚗</div><div class="tm-info"><div class="tm-name">На своем авто (Топливо)</div><div class="tm-duration">В пути: 1 ч.</div></div><div class="tm-price">567 ₽</div></div>
+                </div>
+                <button class="tm-close" onclick="closeTransportModal()">Отмена</button>
+            </div>
+        </div>
+
+        <!-- Гараж -->
+        <div id="garage" class="screen">
+            <div class="screen-header" style="background:#2b7de9; color:white;"><div class="back-btn" onclick="closeScreen('garage')" style="color:white;">←</div><div class="screen-title">Ваш автопарк</div></div>
+            <div class="garage-tabs"><div class="garage-tab active">Мои авто</div><div class="garage-tab">Парковочные места</div></div>
+            <div class="screen-content" id="garage-content"></div>
+        </div>
+
+        <!-- П-Банк -->
+        <div id="pbank" class="screen">
+            <div class="screen-header" style="background:#ff7e00; color:white;"><div class="back-btn" onclick="closeScreen('pbank')" style="color:white;">←</div><div class="screen-title">Банк</div></div>
+            <div class="screen-content">
+                <div class="pbank-balance"><p>ВАШ БАЛАНС</p><h2 id="global-balance">85 215 ₽</h2></div>
+                <div style="font-weight:700; font-size:18px; margin-bottom:10px;">История операций</div>
+                <div class="pbank-txn"><div style="background:#e8f5e9;color:green;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-right:15px;">💳</div><div style="flex:1;"><h4>Начальный капитал</h4><p style="font-size:12px;color:#888;">26.02.2024 09:05</p></div><div style="font-weight:700;color:green;">+85 215 ₽</div></div>
+            </div>
+        </div>
+
+        <!-- PlameFinance -->
+        <div id="finance" class="screen">
+            <div class="screen-header" style="background:#fbbf24; color:#333;"><div class="back-btn" onclick="closeScreen('finance')" style="color:#333;">←</div><div class="screen-title">PlameFinance</div></div>
+            <div class="fin-tabs"><div class="fin-tab active">Кредиты</div><div class="fin-tab">Субсидии</div></div>
+            <div class="screen-content">
+                <div style="background:white; padding:15px; border-radius:10px; margin-bottom:15px;"><h3 style="font-size:16px; margin-bottom:5px;">Ваш кредитный рейтинг</h3><p style="font-size:13px;color:#777;">Успешно погашено: 0 шт.<br>До следующего уровня доверия нужно погасить: 2 шт.</p></div>
+                <h3 style="margin-bottom:10px;">Доступные тарифы:</h3>
+                <div style="background:white; padding:15px; border-radius:10px; margin-bottom:10px; border:2px solid #fbbf24;"><h3>50 000 ₽</h3><p style="font-size:13px;color:#777; margin:5px 0;">Базовая ставка: 35% • До 6 мес.</p><button style="background:#fbbf24;color:black;border:none;padding:10px 20px;border-radius:20px;font-weight:bold;cursor:pointer;" onclick="takeLoan(50000)">Взять</button></div>
+                <div style="background:white; padding:15px; border-radius:10px; margin-bottom:10px; border:2px solid #fbbf24;"><h3>100 000 ₽</h3><p style="font-size:13px;color:#777; margin:5px 0;">Базовая ставка: 30% • До 6 мес.</p><button style="background:#fbbf24;color:black;border:none;padding:10px 20px;border-radius:20px;font-weight:bold;cursor:pointer;" onclick="takeLoan(100000)">Взять</button></div>
+            </div>
+        </div>
+
+        <!-- Сон -->
+        <div id="sleep" class="screen">
+            <div class="screen-header" style="background:#10121a; color:white; position:absolute; top:0; width:100%; z-index:10;"><div class="back-btn" onclick="closeScreen('sleep')" style="color:white;">←</div><div class="screen-title" style="color:white;">Сон</div></div>
+            <div style="margin-top: 80px;">
+                <div style="font-size:60px; margin-bottom:20px;">🌞</div>
+                <div class="sleep-time" id="sleep-current-time">08:00</div>
+                <div class="sleep-date">26.02.2024</div>
+                <div class="sleep-message"><h3 id="sleep-status-title">Сейчас день!</h3><p style="margin-top:5px;" id="sleep-status-desc">Работайте на рынке!</p></div>
+            </div>
+        </div>
+
+        <!-- Календарь -->
+        <div id="calendar" class="screen">
+            <div class="screen-header" style="background:#e63946; color:white;"><div class="back-btn" onclick="closeScreen('calendar')" style="color:white;">←</div><div class="screen-title">Календарь</div></div>
+            <div class="screen-content" id="cal-content"></div>
+        </div>
+
+        <!-- Риэлтор -->
+        <div id="realtor" class="screen">
+            <div class="screen-header" style="background:#0984e3; color:white;"><div class="back-btn" onclick="closeScreen('realtor')" style="color:white;">←</div><div class="screen-title">Агентство недвижимости</div></div>
+            <div style="background:#0984e3; color:white; padding:15px;"><p>Ваш счет: <span style="float:right; font-weight:700;" id="rl-balance">85 215 ₽</span></p><p style="margin-top:10px;">Всего мест в РФ: <span style="float:right; font-weight:700;" id="rl-total-slots">0</span></p></div>
+            <div class="screen-content" id="rl-regions-list"></div>
+        </div>
+
+        <div id="rl-modal" class="rl-modal">
+            <div class="rl-modal-content">
+                <div class="rl-modal-title" id="rl-modal-title">Недвижимость в г. Абакан</div>
+                <div class="rl-modal-text" id="rl-modal-text">В этом городе у вас мест в гаражах: 0</div>
+                <div class="rl-option" onclick="buyRealEstate('Стандартный бокс', 150000)"><div class="rl-option-icon">🏢</div><div><h4>Стандартный бокс</h4><p style="font-size:13px;color:#888;">Вместимость: 1 авто</p></div><div class="rl-option-price">150 000 ₽</div></div>
+                <div class="rl-option" onclick="buyRealEstate('Просторный гараж', 500000)"><div class="rl-option-icon">🏠</div><div><h4>Просторный гараж</h4><p style="font-size:13px;color:#888;">Вместимость: 3 авто</p></div><div class="rl-option-price">500 000 ₽</div></div>
+                <div class="rl-option" onclick="buyRealEstate('Элитный ангар', 2000000)"><div class="rl-option-icon">🏬</div><div><h4>Элитный ангар</h4><p style="font-size:13px;color:#888;">Вместимость: 10 авто</p></div><div class="rl-option-price">2 000 000 ₽</div></div>
+                <button onclick="document.getElementById('rl-modal').style.display='none'" style="width:100%; padding:12px; background:#ccc; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Закрыть</button>
+            </div>
+        </div>
+
+        <!-- Настройки -->
+        <div id="settings" class="screen">
+            <div class="screen-header"><div class="back-btn" onclick="closeScreen('settings')">←</div><div class="screen-title">Настройки</div></div>
+            <div class="screen-content">
+                <div class="set-row"><div class="set-icon" style="background:#e84393;">🎵</div><div class="set-info">Звуковые эффекты</div><div class="set-toggle active" onclick="this.classList.toggle('active')"></div></div>
+                <div class="set-row"><div class="set-icon" style="background:#e17055;">🔔</div><div class="set-info">Уведомления</div><div class="set-toggle active" onclick="this.classList.toggle('active')"></div></div>
+                <div class="set-row" onclick="if(confirm('Сбросить весь прогресс?')) location.reload();"><div class="set-icon" style="background:#d63031;">♻️</div><div class="set-info" style="color:#d63031;">Сбросить прогресс</div></div>
+                <div class="set-row" onclick="deleteAccount()">
+                    <div class="set-icon" style="background:#8e0000;">🗑️</div>
+                    <div class="set-info" style="color:#d63031;">Удалить аккаунт</div>
+                </div>
+                <div class="set-row" id="admin-login-row" onclick="adminLogin()">
+                    <div class="set-icon" style="background:#111;">🛡️</div>
+                    <div class="set-info">Вход в админ-панель</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Блокнот -->
+        <div id="notepad" class="screen">
+            <div class="screen-header"><div class="back-btn" onclick="closeScreen('notepad')">←</div><div class="screen-title">Блокнот</div></div>
+            <div class="screen-content" id="notes-list"></div>
+            <div class="np-add-btn" onclick="openNoteModal()">+</div>
+        </div>
+
+
+        <!-- Админ-панель -->
+        <div id="admin-panel" class="screen">
+            <div class="screen-header" style="background:#111;color:white;">
+                <div class="back-btn" onclick="closeScreen('admin-panel')" style="color:white;">←</div>
+                <div class="screen-title">Админ-панель</div>
+            </div>
+            <div class="screen-content">
+                <div style="background:#111;color:white;padding:16px;border-radius:14px;margin-bottom:15px;">
+                    <div style="font-size:12px;color:#aaa;">УПРАВЛЕНИЕ ИГРОЙ</div>
+                    <h2 style="margin-top:5px;">Пользователи</h2>
+                </div>
+                <div id="admin-users-list"></div>
+            </div>
+        </div>
+
+        <!-- PlameBlocks -->
+        <div id="blocks" class="screen">
+            <div class="screen-header"><div class="back-btn" onclick="closeScreen('blocks')" style="color:white;">←</div><div class="screen-title">PlameBlocks</div></div>
+            <div class="blocks-score"><div>РЕКОРД<br><span style="color:#fbbf24; font-size:24px;">0</span></div><div>ОЧКИ<br><span style="color:#fff; font-size:24px;" id="blocks-score">0</span></div></div>
+            <div class="blocks-grid" id="blocks-grid"></div>
+            <div class="block-controls"><button class="block-control-btn" onclick="moveBlock(-1)">←</button><button class="block-control-btn" onclick="moveBlock(1)">→</button><button class="block-control-btn" onclick="dropBlock()">↓</button><button class="block-control-btn" onclick="rotateBlock()">🔄</button></div>
+        </div>
+
+    </div>
+
+    <div class="android-nav">
+        <div class="nav-btn" onclick="alert('Открыты все приложения')">▢</div>
+        <div class="nav-btn" onclick="location.reload()">○</div>
+        <div class="nav-btn" onclick="history.back()">‹</div>
+    </div>
+</div>
+
+<script>
+    // ===== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ =====
+    let player = {
+        balance: 85215,
+        currentCity: "Чебоксары",
+        totalProfit: 0,
+        loans: [],
+        ownedCars: [],
+        realEstate: {},
+        gameMinutes: 8 * 60,
+        isNight: false,
+        nick: "Иван"
+    };
+
+    // ===== РЕГИСТРАЦИЯ =====
+    function registerPlayer() {
+        // Получаем ник и город
+        let nickInput = document.getElementById('reg-nick').value.trim();
+        let city = document.getElementById('reg-city').value;
+        
+        // Если ник пуст, ставим "Иван"
+        if (!nickInput) {
+            nickInput = "Иван";
+            document.getElementById('reg-nick').value = "Иван";
+        }
+        
+        player.nick = nickInput;
+        player.currentCity = city;
+
+        // Стартовый автомобиль игрока: ГАЗОН NEXT 7м с верхним спальником.
+        const starterTruck = {
+            id: 1000,
+            name: "ГАЗОН NEXT 7м (Верхний спальник)",
+            year: 2020,
+            km: 95,
+            price: 2600000,
+            city: city,
+            seller: player.nick,
+            time: "только что",
+            views: 0,
+            img: "https://avatars.avto.ru/get-autoru-vos/11402504/01936f35caa68f6eaf5816d5bd691748/1200x900",
+            desc: "ГАЗОН NEXT 7 метров. Верхний спальник. Стартовый автомобиль игрока."
+        };
+        player.ownedCars = [starterTruck];
+        player.totalProfit = 0;
+        
+        // Скрываем регистрацию
+        document.getElementById('register-screen').style.display = 'none';
+        // Показываем рамку телефона
+        document.getElementById('game-frame').style.display = 'flex';
+        // Показываем лаунчер
+        document.getElementById('launcher').style.display = 'block';
+        
+        // Обновляем профиль
+        document.getElementById('profile-nick').innerText = player.nick;
+        document.getElementById('profile-avatar-letter').innerText = player.nick.charAt(0).toUpperCase();
+        renderProfileCars();
+        updateTransportCity();
+        
+        // Загружаем онлайн-машины
+        loadOnlineCars();
+        
+        // Загружаем первую страницу
+        renderAvtobuy();
+        updateBalanceDisplay();
+        
+        // После регистрации показываем главное меню приложений.
+        // Avtobuy открывается только по нажатию на его иконку.
+    }
+
+    // ===== МАССИВ МАШИН (С РЕАЛЬНЫМИ ФОТО ИЗ PEXELS) =====
+    // Общий каталог стартует пустым.
+    const allCars = [];
+
+    // ===== ОНЛАЙН-МАГАЗИН (имитация через LocalStorage) =====
+    let onlineCars = [];
+
+    function loadOnlineCars() {
+        // Стартовых онлайн-объявлений нет.
+        onlineCars = [];
+        localStorage.removeItem('onlineCars');
+    }
+
+    // ===== ИГРОВОЕ ВРЕМЯ (2 сек = 1 мин) =====
+    function getGameTimeString() {
+        let mins = player.gameMinutes;
+        let h = Math.floor(mins / 60);
+        let m = mins % 60;
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+
+    setInterval(() => {
+        player.gameMinutes += 1;
+        if (player.gameMinutes >= 22 * 60) {
+            player.isNight = true;
+            if (player.gameMinutes > 22 * 60) player.gameMinutes = 22 * 60;
+        } else {
+            player.isNight = false;
+        }
+        let clockEl = document.getElementById('header-clock');
+        if (clockEl) clockEl.innerText = getGameTimeString();
+        
+        if (document.getElementById('sleep').style.display === 'flex') {
+            document.getElementById('sleep-current-time').innerText = getGameTimeString();
+            let title = document.getElementById('sleep-status-title');
+            let desc = document.getElementById('sleep-status-desc');
+            if (player.isNight) {
+                title.innerText = "Сейчас ночь!";
+                desc.innerText = "Возвращайтесь на рынок утром.";
+            } else {
+                title.innerText = "Сейчас день!";
+                desc.innerText = "Работайте на рынке!";
+            }
+        }
+    }, 2000);
+
+    // ===== ОБНОВЛЕНИЕ БАЛАНСА =====
+    function updateBalanceDisplay() {
+        let el = document.getElementById('global-balance');
+        if (el) el.innerText = player.balance.toLocaleString('ru-RU') + ' ₽';
+        let el2 = document.getElementById('rl-balance');
+        if (el2) el2.innerText = player.balance.toLocaleString('ru-RU') + ' ₽';
+        let el3 = document.getElementById('profile-profit');
+        if (el3) el3.innerText = player.totalProfit.toLocaleString('ru-RU') + ' ₽';
+    }
+
+    // ===== AVTOBUY =====
+    function renderAvtobuy() {
+        let html = '';
+        allCars.forEach(car => {
+            html += `<div class="ab-card" onclick="openDetail(${car.id})">
+                <div class="ab-card-img" style="background-image:url('${car.img}')"></div>
+                <div class="ab-card-body">
+                    <div class="ab-price">${car.price.toLocaleString('ru-RU')} ₽</div>
+                    <div class="ab-title">${car.name}</div>
+                    <div class="ab-specs">${car.year} г. • ${car.km} тыс. км</div>
+                    <div class="ab-specs">📍 ${car.city}</div>
+                    <div class="ab-seller">${car.seller}<br><span style="font-weight:400; color:#888;">Частное лицо</span></div>
+                    <div class="ab-date">⏱ ${car.time}</div>
+                </div>
+            </div>`;
+        });
+        
+        // Онлайн машины
+        onlineCars.forEach(car => {
+            html += `<div class="ab-card" onclick="openOnlineDetail(${car.id})">
+                <div class="ab-card-img" style="background-image:url('${car.img}')"></div>
+                <div class="ab-card-body">
+                    <div class="ab-price">${car.price.toLocaleString('ru-RU')} ₽</div>
+                    <div class="ab-title">${car.name} <span style="font-size:11px; background:#00a550; color:white; padding:2px 5px; border-radius:5px;">ОНЛАЙН</span></div>
+                    <div class="ab-specs">${car.year} г. • ${car.km} тыс. км</div>
+                    <div class="ab-specs">📍 ${car.city}</div>
+                    <div class="ab-seller">${car.seller}<br><span style="font-weight:400; color:#888;">Игрок</span></div>
+                </div>
+            </div>`;
+        });
+        
+        document.getElementById('ab-content').innerHTML = html;
+        updateBalanceDisplay();
+    }
+
+    function openDetail(id) {
+        let car = allCars.find(c => c.id === id);
+        if (!car) return;
+        document.getElementById('avtobuy').style.display = 'none';
+        document.getElementById('detail-screen').style.display = 'flex';
+        document.getElementById('detail-title-top').innerText = car.name;
+        document.getElementById('detail-title').innerText = car.name;
+        document.getElementById('detail-price').innerText = car.price.toLocaleString('ru-RU') + ' ₽';
+        document.getElementById('detail-img').style.backgroundImage = `url('${car.img}')`;
+        document.getElementById('detail-avatar').innerText = car.seller.charAt(0).toUpperCase();
+        document.getElementById('detail-seller-name').innerText = car.seller;
+
+        let specsHtml = `
+            <div class="spec-row"><span>Год выпуска</span><span>${car.year} г.</span></div>
+            <div class="spec-row"><span>Пробег</span><span>${car.km} тыс. км</span></div>
+            <div class="spec-row"><span>Город</span><span>${car.city}</span></div>
+            <div class="spec-row"><span>Просмотров</span><span>${car.views}</span></div>
+            <div class="spec-row"><span>ID объявления</span><span>#${car.id}</span></div>
+        `;
+        document.getElementById('detail-specs').innerHTML = specsHtml;
+        document.getElementById('detail-market-value').innerText = Math.round(car.price * 1.02).toLocaleString('ru-RU') + ' ₽';
+        document.getElementById('detail-description').innerText = car.desc;
+
+        let actionsHtml = `<button class="btn-blue" onclick="buyCar(${car.id})">💵 Купить за ${car.price.toLocaleString('ru-RU')} ₽</button>`;
+        if (player.ownedCars.some(c => c.id === car.id)) {
+            actionsHtml = `<button class="btn-green" onclick="sellCar(${car.id})">💰 Продать (${Math.round(car.price * 1.2).toLocaleString('ru-RU')} ₽)</button>`;
+        }
+        document.getElementById('detail-actions').innerHTML = actionsHtml;
+    }
+
+    function openOnlineDetail(id) {
+        let car = onlineCars.find(c => c.id === id);
+        if (!car) return;
+        document.getElementById('avtobuy').style.display = 'none';
+        document.getElementById('detail-screen').style.display = 'flex';
+        document.getElementById('detail-title-top').innerText = car.name;
+        document.getElementById('detail-title').innerText = car.name;
+        document.getElementById('detail-price').innerText = car.price.toLocaleString('ru-RU') + ' ₽';
+        document.getElementById('detail-img').style.backgroundImage = `url('${car.img}')`;
+        document.getElementById('detail-avatar').innerText = car.seller.charAt(0).toUpperCase();
+        document.getElementById('detail-seller-name').innerText = car.seller;
+
+        let specsHtml = `
+            <div class="spec-row"><span>Год выпуска</span><span>${car.year} г.</span></div>
+            <div class="spec-row"><span>Пробег</span><span>${car.km} тыс. км</span></div>
+            <div class="spec-row"><span>Город</span><span>${car.city}</span></div>
+            <div class="spec-row"><span>Источник</span><span>Онлайн</span></div>
+        `;
+        document.getElementById('detail-specs').innerHTML = specsHtml;
+        document.getElementById('detail-market-value').innerText = Math.round(car.price * 1.0).toLocaleString('ru-RU') + ' ₽';
+        document.getElementById('detail-description').innerText = car.desc;
+
+        document.getElementById('detail-actions').innerHTML = `<button class="btn-blue" onclick="buyOnlineCar(${car.id})">💵 Купить за ${car.price.toLocaleString('ru-RU')} ₽</button>`;
+    }
+
+    function closeDetail() {
+        document.getElementById('detail-screen').style.display = 'none';
+        document.getElementById('avtobuy').style.display = 'flex';
+    }
+
+    // ===== ПОКУПКА / ПРОДАЖА =====
+    function buyCar(id) {
+        let car = allCars.find(c => c.id === id);
+        if (player.balance < car.price) { alert("Недостаточно денег!"); return; }
+        player.balance -= car.price;
+        player.ownedCars.push(car);
+        alert(`Вы купили ${car.name}! Машина добавлена в гараж.`);
+        updateBalanceDisplay();
+        closeDetail();
+        renderAvtobuy();
+    }
+
+    function sellCar(id) {
+        let carIndex = player.ownedCars.findIndex(c => c.id === id);
+        if (carIndex === -1) return;
+        let car = player.ownedCars[carIndex];
+        let sellPrice = Math.round(car.price * 1.2);
+        player.balance += sellPrice;
+        player.totalProfit += sellPrice - car.price;
+        player.ownedCars.splice(carIndex, 1);
+        renderProfileCars();
+        alert(`Вы продали ${car.name} за ${sellPrice.toLocaleString('ru-RU')} ₽!`);
+        updateBalanceDisplay();
+        closeDetail();
+        renderAvtobuy();
+    }
+
+    function buyOnlineCar(id) {
+        let car = onlineCars.find(c => c.id === id);
+        if (player.balance < car.price) { alert("Недостаточно денег!"); return; }
+        player.balance -= car.price;
+        player.ownedCars.push(car);
+        
+        // Убираем из онлайна
+        onlineCars = onlineCars.filter(c => c.id !== id);
+        localStorage.setItem('onlineCars', JSON.stringify(onlineCars));
+        
+        alert(`Вы купили ${car.name} у игрока ${car.seller}!`);
+        updateBalanceDisplay();
+        closeDetail();
+        renderAvtobuy();
+    }
+
+    // ===== НАВИГАЦИЯ AVTOBUY =====
+    function showAvtobuyPage(page, btn) {
+        document.getElementById('avtobuy').style.display = 'none';
+        document.getElementById('favorites-screen').style.display = 'none';
+        document.getElementById('new-listing-screen').style.display = 'none';
+        document.getElementById('chats-screen').style.display = 'none';
+        document.getElementById('profile-screen').style.display = 'none';
+
+        if (page === 'main') document.getElementById('avtobuy').style.display = 'flex';
+        else if (page === 'favorites') document.getElementById('favorites-screen').style.display = 'flex';
+        else if (page === 'new') {
+            document.getElementById('new-listing-screen').style.display = 'flex';
+            let html = '';
+            if (player.ownedCars.length === 0) {
+                html = '<div class="empty-state">У вас пока нет машин для продажи</div>';
+            } else {
+                player.ownedCars.forEach(car => {
+                    html += `<div class="new-listing-card">
+                        <div class="new-listing-img" style="background-image:url('${car.img}')"></div>
+                        <div><h4>${car.name}</h4><p style="color:#2b7de9; font-weight:700;">Цена: ${Math.round(car.price * 1.2).toLocaleString('ru-RU')} ₽</p></div>
+                        <button class="sell-btn" onclick="sellCar(${car.id})">Продать</button>
+                    </div>`;
+                });
+            }
+            document.getElementById('new-listing-content').innerHTML = html;
+        }
+        else if (page === 'chats') document.getElementById('chats-screen').style.display = 'flex';
+        else if (page === 'profile') {
+            document.getElementById('profile-screen').style.display = 'flex';
+            renderProfileCars();
+        }
+
+        document.querySelectorAll('.ab-nav-item').forEach(el => el.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+    }
+
+    function renderProfileCars() {
+        const list = document.getElementById('profile-cars-list');
+        const empty = document.getElementById('profile-empty-text');
+        if (!list || !empty) return;
+
+        if (player.ownedCars.length === 0) {
+            list.innerHTML = '';
+            empty.style.display = 'block';
+            return;
+        }
+
+        empty.style.display = 'none';
+        list.innerHTML = player.ownedCars.map(car => `
+            <div class="ab-card" style="cursor:default;">
+                <div class="ab-card-img" style="height:200px;background-image:url('${car.img}')"></div>
+                <div class="ab-card-body">
+                    <div class="ab-title">${car.name}</div>
+                    <div class="ab-specs">${car.year} г. • ${car.km} тыс. км</div>
+                    <div class="ab-specs">📍 ${car.city}</div>
+                    <div class="ab-specs">Верхний спальник • 7 м</div>
+                    <div class="ab-price" style="margin-top:8px;">${car.price.toLocaleString('ru-RU')} ₽</div>
+                    <button class="sell-btn" style="margin-top:10px;" onclick="sellCar(${car.id})">Продать</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function goBackToMainAvtobuy() {
+        document.getElementById('favorites-screen').style.display = 'none';
+        document.getElementById('new-listing-screen').style.display = 'none';
+        document.getElementById('chats-screen').style.display = 'none';
+        document.getElementById('profile-screen').style.display = 'none';
+        document.getElementById('avtobuy').style.display = 'flex';
+    }
+
+    // ===== ОТКРЫТИЕ ЭКРАНОВ =====
+    function openScreen(id) {
+        document.getElementById('launcher').style.display = 'none';
+        document.querySelectorAll('.screen').forEach(el => el.style.display = 'none');
+        if (id === 'avtobuy') { showAvtobuyPage('main', document.querySelector('.ab-nav-item.active')); renderAvtobuy(); }
+        else document.getElementById(id).style.display = 'flex';
+        if (id === 'transport') { renderTransport(); updateTransportCity(); }
+        if (id === 'garage') renderGarage();
+        if (id === 'calendar') renderCalendar();
+        if (id === 'realtor') { renderRealtor(); updateBalanceDisplay(); }
+        if (id === 'notepad') renderNotes();
+        if (id === 'blocks') initBlocks();
+        updateBalanceDisplay();
+    }
+
+    function closeScreen(id) {
+        document.getElementById(id).style.display = 'none';
+        document.getElementById('launcher').style.display = 'block';
+    }
+
+    // ===== ТРАНСПОРТ =====
+    const cities = [
+        {name:"Йошкар-Ола", km:81}, {name:"Казань", km:147}, {name:"Нижний Новгород", km:242}, {name:"Ульяновск", km:258}, {name:"Саранск", km:304}, {name:"Киров", km:373},
+        {name:"Пенза", km:428}, {name:"Самара", km:449}, {name:"Ижевск", km:449}, {name:"Москва", km:650}, {name:"Тула", km:700}, {name:"Санкт-Петербург", km:1200},
+        {name:"Краснодар", km:1500}, {name:"Абакан", km:3800}, {name:"Анадырь", km:6500}, {name:"Архангельск", km:1200}, {name:"Астрахань", km:900}, {name:"Барнаул", km:3200}
+    ];
+
+    function renderTransport() {
+        let html = '';
+        cities.forEach(city => {
+            if (city.name !== player.currentCity) {
+                html += `<div class="tr-city-item" onclick="openTransportModal('${city.name}', ${city.km})">
+                    <div style="font-size:24px; margin-right:15px;">🏢</div>
+                    <div><div class="tr-city-name">${city.name}</div><div class="tr-city-km">${city.km} км</div></div>
+                    <div class="tr-arrow">›</div></div>`;
+            }
+        });
+        document.getElementById('transport-list').innerHTML = html;
+    }
+
+    function updateTransportCity() {
+        document.getElementById('transport-current-city').innerText = player.currentCity;
+        document.getElementById('current-city-label').innerText = player.currentCity;
+    }
+
+    function openTransportModal(city, km) {
+        document.getElementById('tm-title').innerText = `Маршрут: ${player.currentCity} → ${city}`;
+        document.getElementById('tm-subtitle').innerText = `Расстояние: ${km} км`;
+        document.getElementById('transport-modal').style.display = 'flex';
+    }
+
+    function closeTransportModal() {
+        document.getElementById('transport-modal').style.display = 'none';
+    }
+
+    function buyTransport(type, price) {
+        if (player.balance < price) { alert("Недостаточно денег на поездку!"); return; }
+        let cityName = document.getElementById('tm-title').innerText.split('→')[1].trim();
+        player.balance -= price;
+        player.currentCity = cityName;
+        updateTransportCity();
+        updateBalanceDisplay();
+        alert(`Вы доехали до ${cityName} на транспорте: ${type}. Потрачено: ${price.toLocaleString('ru-RU')} ₽`);
+        closeTransportModal();
+        renderAvtobuy();
+        renderTransport();
+    }
+
+    // ===== ГАРАЖ =====
+    function renderGarage() {
+        let html = '';
+        if (player.ownedCars.length === 0) {
+            html = '<div class="empty-state" style="text-align:center;color:#888;margin-top:40px;">Гараж пуст. Купите первую машину!</div>';
+        } else {
+            player.ownedCars.forEach(car => {
+                html += `<div class="garage-card">
+                    <div style="width:80px;height:60px;border-radius:5px;background:url('${car.img}') center/cover;margin-right:15px;"></div>
+                    <div><h3>${car.name}</h3><p>${car.year} • ${car.km} тыс. км</p><p>📍 ${player.currentCity}</p><p style="color:#2b7de9;">P В гараже</p></div>
+                </div>`;
+            });
+        }
+        document.getElementById('garage-content').innerHTML = html;
+    }
+
+    // ===== КРЕДИТЫ =====
+    function takeLoan(amount) {
+        if (confirm(`Взять кредит на ${amount.toLocaleString('ru-RU')} ₽?`)) {
+            player.balance += amount;
+            player.loans.push({ amount: amount, due: 6 });
+            alert(`Кредит выдан! На ваш счет зачислено ${amount.toLocaleString('ru-RU')} ₽`);
+            updateBalanceDisplay();
+        }
+    }
+
+    // ===== КАЛЕНДАРЬ =====
+    let meetings = { "2026-02-26": [{time:"14:00", car:"BMW X5"}] };
+    function renderCalendar() {
+        let html = '<div class="cal-month">ФЕВРАЛЬ 2026</div>';
+        html += `<div class="cal-grid"><div class="cal-day-header">Пн</div><div class="cal-day-header">Вт</div><div class="cal-day-header">Ср</div><div class="cal-day-header">Чт</div><div class="cal-day-header">Пт</div><div class="cal-day-header">Сб</div><div class="cal-day-header">Вс</div>`;
+        for(let i=0; i<3; i++) html += '<div></div>';
+        for(let d=1; d<=28; d++) html += `<div class="cal-day ${d===26?'today':''}" onclick="showMeetings(${d})">${d}</div>`;
+        html += '</div>';
+        html += '<div class="cal-meetings-title">Встречи на 26 февраля:</div><div id="cal-meetings-list"></div>';
+        html += '<button style="background:#e63946; color:white; border:none; padding:10px; width:100%; border-radius:10px; font-weight:700; cursor:pointer; margin-top:20px;" onclick="addMeeting()">+ Назначить встречу</button>';
+        document.getElementById('cal-content').innerHTML = html;
+        showMeetings(26);
+    }
+
+    function showMeetings(day) {
+        let dateStr = `2026-02-${String(day).padStart(2,'0')}`;
+        document.querySelector('.cal-meetings-title').innerText = `Встречи на ${day} февраля:`;
+        let html = '';
+        if (meetings[dateStr]) {
+            meetings[dateStr].forEach(m => {
+                html += `<div class="meeting-item"><div><h4>${m.car}</h4><p style="font-size:13px;color:#777;">Осмотр автомобиля</p></div><div class="meeting-time">${m.time}</div></div>`;
+            });
+        } else {
+            html = '<div style="text-align:center;color:#888;padding:20px;">Нет запланированных встреч</div>';
+        }
+        document.getElementById('cal-meetings-list').innerHTML = html;
+    }
+
+    function addMeeting() {
+        let time = prompt("Введите время встречи (например, 15:00):");
+        let car = prompt("Введите марку машины (например, Toyota Camry):");
+        if (time && car) {
+            let dateStr = '2026-02-26';
+            if (!meetings[dateStr]) meetings[dateStr] = [];
+            meetings[dateStr].push({time: time, car: car});
+            renderCalendar();
+            alert("Встреча добавлена!");
+        }
+    }
+
+    // ===== РИЭЛТОР =====
+    function renderRealtor() {
+        let html = '';
+        cities.forEach(city => {
+            let ownedSlots = player.realEstate[city.name] ? player.realEstate[city.name].slots : 0;
+            html += `<div class="rl-region" onclick="openRlModal('${city.name}')"><h4>${city.name}</h4><p style="color:#888;font-size:13px;margin-left:10px;">${ownedSlots > 0 ? ownedSlots + ' мест' : 'Нет недвижимости'}</p><button class="rl-buy-btn">Купить</button></div>`;
+        });
+        document.getElementById('rl-regions-list').innerHTML = html;
+    }
+
+    function openRlModal(city) {
+        let ownedSlots = player.realEstate[city] ? player.realEstate[city].slots : 0;
+        document.getElementById('rl-modal-title').innerText = `Недвижимость в г. ${city}`;
+        document.getElementById('rl-modal-text').innerText = `В этом городе у вас мест в гаражах: ${ownedSlots}`;
+        document.getElementById('rl-modal').style.display = 'flex';
+    }
+
+    function buyRealEstate(type, price) {
+        if (player.balance < price) { alert("Недостаточно денег!"); return; }
+        player.balance -= price;
+        let city = document.getElementById('rl-modal-title').innerText.replace('Недвижимость в г. ', '');
+        let slots = type === 'Стандартный бокс' ? 1 : (type === 'Просторный гараж' ? 3 : 10);
+        if (!player.realEstate[city]) player.realEstate[city] = { slots: 0 };
+        player.realEstate[city].slots += slots;
+        alert(`Вы купили: ${type} за ${price.toLocaleString('ru-RU')} ₽ в городе ${city}!`);
+        document.getElementById('rl-modal').style.display = 'none';
+        updateBalanceDisplay();
+        renderRealtor();
+    }
+
+    // ===== БЛОКНОТ =====
+    let notes = [];
+    function renderNotes() {
+        let html = notes.length === 0 ? '<p style="text-align:center;color:#888;margin-top:40px;">Нет заметок</p>' : '';
+        notes.forEach((n, i) => html += `<div class="np-note" onclick="alert('Заметка: ${n}')"><h4>Заметка #${i+1}</h4><p>${n}</p></div>`);
+        document.getElementById('notes-list').innerHTML = html;
+    }
+    function openNoteModal() {
+        let text = prompt("Введите заметку:");
+        if (text) { notes.push(text); renderNotes(); }
+    }
+
+    // ===== PLAMEBLOCKS =====
+    let blockGrid = Array(64).fill(0);
+    let pos = 30;
+    function initBlocks() {
+        blockGrid = Array(64).fill(0);
+        pos = 30; blockGrid[pos] = 1;
+        renderBlocks();
+    }
+    function renderBlocks() {
+        let html = '';
+        for(let i=0;i<64;i++) html += `<div class="block-cell${blockGrid[i]===1?' active':''}"></div>`;
+        document.getElementById('blocks-grid').innerHTML = html;
+    }
+    function moveBlock(d) { if(pos+d>=0 && pos+d<64) { blockGrid[pos]=0; pos+=d; blockGrid[pos]=1; renderBlocks(); } }
+    function dropBlock() { if(pos+8<64) { blockGrid[pos]=0; pos+=8; blockGrid[pos]=1; renderBlocks(); } else { alert("Блок установлен!"); initBlocks(); } }
+    function rotateBlock() { alert("Вращение"); }
+</script>
+
+
+
+
+<script>
+/* ===== PLAMEAPPS OFFLINE MODE =====
+   Никакого сервера, WebSocket или GitHub API.
+   Данные аккаунта сохраняются только на этом устройстве.
+*/
+(function initOfflineAccount() {
+    try {
+        const saved = localStorage.getItem("plame_player");
+        const registered = localStorage.getItem("plame_account_registered") === "1";
+
+        if (registered && saved) {
+            const savedPlayer = JSON.parse(saved);
+            Object.assign(player, savedPlayer);
+
+            window.addEventListener("load", function() {
+                const reg = document.getElementById("register-screen");
+                const frame = document.getElementById("game-frame");
+                const launcher = document.getElementById("launcher");
+                if (reg) reg.style.display = "none";
+                if (frame) frame.style.display = "flex";
+                if (launcher) launcher.style.display = "block";
+
+                const nick = document.getElementById("profile-nick");
+                const avatar = document.getElementById("profile-avatar-letter");
+                if (nick) nick.innerText = player.nick;
+                if (avatar) avatar.innerText = (player.nick || "?").charAt(0).toUpperCase();
+
+                if (typeof updateBalanceDisplay === "function") updateBalanceDisplay();
+                if (typeof updateTransportCity === "function") updateTransportCity();
+                if (typeof renderProfileCars === "function") renderProfileCars();
+            });
+        }
+    } catch (e) {
+        console.warn("Не удалось восстановить офлайн-аккаунт", e);
+    }
+})();
+
+/* Сохраняем изменения игрока при уходе со страницы. */
+window.addEventListener("beforeunload", function() {
+    try {
+        if (localStorage.getItem("plame_account_registered") === "1") {
+            localStorage.setItem("plame_player", JSON.stringify(player));
+        }
+    } catch(e) {}
+});
+</script>
+
+</body>
+</html>
